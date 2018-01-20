@@ -6,8 +6,6 @@
 //  Copyright © 2018년 Kim. All rights reserved.
 //
 
-// https://api.fixer.io/2001-01-03?base=USD&symbols=KRW
-
 #define SOURCE_CURRENCY @"source_CURRENCY"
 #define TARGET_CURRENCY @"TARGET_CURRENCY"
 #define SOURCE @"source"
@@ -44,14 +42,12 @@
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *currencyViewHeight;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *currencyViewRight;
 
-
 @end
 
 @implementation ViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
     
     [self prepareDeviceRotation];
     [self jsonFetch];
@@ -65,79 +61,31 @@
     [self initCurrencyView];
     [self initDatePickerView];
     [self initCurrencyPickerView];
-    
-    
 }
 
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 #pragma mark Init
 
 - (void)prepareDeviceRotation {
     [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
-    [[NSNotificationCenter defaultCenter]
-     addObserver:self selector:@selector(orientationChanged:)
-     name:UIDeviceOrientationDidChangeNotification
-     object:[UIDevice currentDevice]];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationChanged:) name:UIDeviceOrientationDidChangeNotification object:[UIDevice currentDevice]];
 }
 
 - (void)initData {
     self.sourceCurrency = @"EUR";
-    self.targetCurrency = @"EUR";
-    
     self.sourceAmount = @"1";
+    
+    self.targetCurrency = @"EUR";
     self.targetAmount = @"1";
 }
 
-- (void)initDatePickerView {
-    self.datePickerView.frame = self.keypadView.frame;
-    [self.datePickerView setValue:[UIColor whiteColor] forKey:@"textColor"];
-    
-    NSString *dateString = @"1999-01-01";
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
-    self.datePickerView.minimumDate = [dateFormatter dateFromString:dateString];
-    self.datePickerView.maximumDate = [NSDate date];
-    self.datePickerView.date = [NSDate date];
-    
-    [self displayDate];
-}
-
-- (void)initCurrencyPickerView {
-    self.currencyPickerView.frame = self.keypadView.frame;
-    self.currencyPickerView.delegate = self;
-    self.currencyPickerView.dataSource = self;
-}
-
-- (void)initCurrencyView {
-    if ([self.rotation isEqualToString:PORTRAIT]) {
-        self.currencyViewRight.constant = 20;
-        self.currencyViewHeight.constant = 223;
-    } else {
-        CGRect windowRect = [[UIScreen mainScreen] bounds];
-        CGFloat windowWidth = windowRect.size.width - 40;
-        CGFloat windowHeight = windowRect.size.height - 40;
-        self.currencyViewRight.constant = windowWidth / 2 + 30;
-        self.currencyViewHeight.constant = windowHeight;
-    }
-    
-    self.currencyView.layer.cornerRadius = 12;
-    self.currencyView.layer.masksToBounds = true;
-    
-    self.currencyMode = SOURCE;
-    [self displayCurrencies];
-    [self displayAmounts];
-}
-
 - (void)initKeypadView {
-    for (UIView *subView in self.keypadView.subviews)
-    {
-        [subView removeFromSuperview];
-    }
+    for (UIView *subView in self.keypadView.subviews) [subView removeFromSuperview];
     
     CGRect windowRect = [[UIScreen mainScreen] bounds];
     CGFloat windowWidth = windowRect.size.width - 40;
@@ -146,11 +94,10 @@
     CGRect frame = CGRectZero;
     if ([self.rotation isEqualToString:PORTRAIT]) {
         frame = CGRectMake(20, self.currencyViewHeight.constant + 60, windowWidth, windowHeight - self.currencyViewHeight.constant - 60);
-    } else {
+    }
+    else {
         frame = CGRectMake(windowWidth / 2 + 30, 20, windowWidth / 2 - 10, windowHeight);
     }
-    
-    NSLog(@"keypad view: %@", NSStringFromCGRect(frame));
     self.keypadView.frame = frame;
     
     NSArray *keypads = [NSArray arrayWithObjects:
@@ -162,8 +109,6 @@
     
     float width = frame.size.width / 3;
     float height = frame.size.height / 4;
-    
-    NSLog(@"width: %f, height: %f", width, height);
     
     for (int i = 0; i < 12; i++) {
         UIButton *keypad = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -179,9 +124,51 @@
     }
 }
 
+- (void)initDatePickerView {
+    self.datePickerView.frame = self.keypadView.frame;
+    
+    [self.datePickerView setValue:[UIColor whiteColor] forKey:@"textColor"];
+    
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+    self.datePickerView.minimumDate = [dateFormatter dateFromString:@"1999-01-04"];
+    self.datePickerView.maximumDate = [NSDate date];
+    self.datePickerView.date = [NSDate date];
+    
+    [self displayDate];
+}
+
+- (void)initCurrencyPickerView {
+    self.currencyPickerView.frame = self.keypadView.frame;
+    
+    self.currencyPickerView.delegate = self;
+    self.currencyPickerView.dataSource = self;
+}
+
+- (void)initCurrencyView {
+    self.currencyView.layer.cornerRadius = 12;
+    self.currencyView.layer.masksToBounds = true;
+    
+    if ([self.rotation isEqualToString:PORTRAIT]) {
+        self.currencyViewRight.constant = 20;
+        self.currencyViewHeight.constant = 223;
+    } else {
+        CGRect windowRect = [[UIScreen mainScreen] bounds];
+        CGFloat windowWidth = windowRect.size.width - 40;
+        CGFloat windowHeight = windowRect.size.height - 40;
+        self.currencyViewRight.constant = windowWidth / 2 + 30;
+        self.currencyViewHeight.constant = windowHeight;
+    }
+    
+    self.currencyMode = SOURCE;
+    
+    [self displayCurrencies];
+    [self displayAmounts];
+}
+
 #pragma mark Process Methods
 
-- (void)jsonFetch{
+- (void)jsonFetch {
     self.currencies = [NSMutableArray arrayWithObject:@"EUR"];
     self.rates = [NSMutableArray arrayWithObject:@"1.000"];
     
@@ -191,41 +178,38 @@
     [formatter setDateFormat:@"yyyy-MM-dd"];
     
     NSString *dateString = [formatter stringFromDate:date];
-    
-    
     NSString *urlString = [NSString stringWithFormat:@"https://api.fixer.io/%@", dateString];
-    NSLog(@"url: %@", urlString);
+    NSLog(@"url string: %@", urlString);
     NSURL *url = [NSURL URLWithString:urlString];
     NSURLSession *session = [NSURLSession sharedSession];
     
     NSURLSessionDataTask *data = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
         
-        NSError *erro = nil;
+        NSLog(@"data: %@", data);
+        NSLog(@"error: %@", error);
         
-        if (data!=nil) {
+        if (data != nil && error == nil) {
+            NSError *jsonError = nil;
             
-            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&erro ];
-            NSLog(@"json: %@", json);
-            
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&jsonError ];
+
             for (NSString *currency in [json[@"rates"] allKeys]) {
                 [self.currencies addObject:currency];
                 [self.rates addObject:@"1.000"];
             }
             
             // sort
-            
             NSLog(@"currencies: %@", self.currencies);
             
             if (json.count > 0) {
                 for (NSString *currency in self.currencies) {
                     NSLog(@"currency: %@", currency);
-                    
                     if ([currency isEqualToString:@"EUR"]) {
                         [self.rates replaceObjectAtIndex:[self.currencies indexOfObject:currency] withObject:@"1.000"];
-                    } else {
+                    }
+                    else {
                         [self.rates replaceObjectAtIndex:[self.currencies indexOfObject:currency] withObject:[json[@"rates"] valueForKey:currency]];
                     }
-                    
                 }
             }
         }
@@ -263,12 +247,13 @@
 - (void)convertAmount {
     double sourceRate = [[self.rates objectAtIndex:[self.currencies indexOfObject:self.sourceCurrency]] doubleValue];
     double targetRate = [[self.rates objectAtIndex:[self.currencies indexOfObject:self.targetCurrency]] doubleValue];
+    
     if ([self.currencyMode isEqualToString:SOURCE]) {
         self.targetAmount = [NSString stringWithFormat:@"%.2f", [self.sourceAmount doubleValue] * targetRate / sourceRate];
-    } else if ([self.currencyMode isEqualToString:TARGET]) {
+    }
+    else if ([self.currencyMode isEqualToString:TARGET]) {
         self.sourceAmount = [NSString stringWithFormat:@"%.2f", [self.targetAmount doubleValue] * sourceRate / targetRate];
     }
-    
 }
 
 - (NSString *)stringToDecimal:(NSString *)string {
@@ -290,7 +275,8 @@
     
     if ([self.currencyMode isEqualToString:SOURCE]) {
         amount = self.sourceAmount;
-    } else if ([self.currencyMode isEqualToString:TARGET]) {
+    }
+    else if ([self.currencyMode isEqualToString:TARGET]) {
         amount = self.targetAmount;
     }
     
@@ -298,17 +284,21 @@
         if (amount.length > 0) {
             amount = [amount substringToIndex:amount.length - 1];
         }
-    } else if ([string isEqualToString:@"."]){
+    }
+    else if ([string isEqualToString:@"."]){
         if ([amount rangeOfString:string].location == NSNotFound) {
             amount = [NSString stringWithFormat:@"%@%@", amount, string];
         }
-    } else {
+    }
+    else {
         if ([amount rangeOfString:@"."].location != NSNotFound && [amount rangeOfString:@"."].location == amount.length - 3) {
             //
-        } else {
+        }
+        else {
             if ([amount isEqualToString:@"0"]) {
                 amount = [NSString stringWithFormat:@"%@", string];
-            } else {
+            }
+            else {
                 amount = [NSString stringWithFormat:@"%@%@", amount, string];
             }
         }
@@ -316,33 +306,42 @@
     
     if ([self.currencyMode isEqualToString:SOURCE]) {
         self.sourceAmount = amount;
-    } else if ([self.currencyMode isEqualToString:TARGET]) {
+    }
+    else if ([self.currencyMode isEqualToString:TARGET]) {
         self.targetAmount = amount;
     }
 }
 
 - (void)orientationChanged:(NSNotification *)note{
+    BOOL isChanged = NO;
+    
     UIDevice * device = note.object;
+    
     switch(device.orientation) {
         case UIDeviceOrientationPortrait:
             self.rotation = PORTRAIT;
+            isChanged = YES;
+            break;
+            
+        case UIDeviceOrientationLandscapeLeft:
+        case UIDeviceOrientationLandscapeRight:
+            self.rotation = LANDSCAPE;
+            isChanged = YES;
             break;
             
         default:
-            self.rotation = LANDSCAPE;
             break;
     };
     
-    NSLog(@"rotation: %@", self.rotation);
-    
-    [self initCurrencyView];
-    [self initKeypadView];
-    [self initDatePickerView];
-    [self initCurrencyPickerView];
+    if (isChanged) {
+        [self initCurrencyView];
+        [self initKeypadView];
+        [self initDatePickerView];
+        [self initCurrencyPickerView];
+    }
 }
 
 #pragma mark Action Methods
-
 
 - (void)keypadPressed:(UIButton *)keypad {
     [self changeAmount:keypad.titleLabel.text];
@@ -366,7 +365,8 @@
     
     if ([self.currencyMode isEqualToString:SOURCE]) {
         row = [self.currencies indexOfObject:self.sourceCurrency];
-    } else if ([self.currencyMode isEqualToString:TARGET]) {
+    }
+    else if ([self.currencyMode isEqualToString:TARGET]) {
         row = [self.currencies indexOfObject:self.targetCurrency];
     }
     
@@ -405,9 +405,11 @@
     
     if (button.tag == 0) {
         self.currencyMode = SOURCE;
-    } else if (button.tag == 1) {
+    }
+    else if (button.tag == 1) {
         self.currencyMode = TARGET;
-    } else {
+    }
+    else {
         //
     }
     
@@ -419,9 +421,11 @@
     
     if (button.tag == 0) {
         self.currencyMode = SOURCE;
-    } else if (button.tag == 1) {
+    }
+    else if (button.tag == 1) {
         self.currencyMode = TARGET;
-    } else {
+    }
+    else {
         //
     }
     
@@ -431,11 +435,10 @@
 - (IBAction)datePickerViewChanged:(id)sender {
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy-MM-dd"];
-    NSLog(@"%@ %@", [formatter stringFromDate:self.datePickerView.date], [formatter stringFromDate:[NSDate date]]);
-    
     if ([[formatter stringFromDate:self.datePickerView.date] isEqualToString:[formatter stringFromDate:[NSDate date]]]) {
         self.todayButton.hidden = YES;
-    } else {
+    }
+    else {
         self.todayButton.hidden = NO;
     }
     
@@ -453,28 +456,21 @@
 
 #pragma mark UIPickerView
 
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
-{
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
     return 1;
 }
 
-// The number of rows of data
-- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
-{
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
     return self.currencies.count;
 }
 
-// The data to return for the row and component (column) that's being passed in
-- (NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
-{
+- (NSString*)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
     return self.currencies[row];
 }
 
-- (NSAttributedString *)pickerView:(UIPickerView *)pickerView attributedTitleForRow:(NSInteger)row forComponent:(NSInteger)component
-{
+- (NSAttributedString *)pickerView:(UIPickerView *)pickerView attributedTitleForRow:(NSInteger)row forComponent:(NSInteger)component {
     NSString *title = self.currencies[row];
-    NSAttributedString *attString =
-    [[NSAttributedString alloc] initWithString:title attributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]}];
+    NSAttributedString *attString = [[NSAttributedString alloc] initWithString:title attributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]}];
     
     return attString;
 }
@@ -482,15 +478,13 @@
 - (void)pickerView:(UIPickerView *)thePickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
     if ([self.currencyMode isEqualToString:SOURCE]) {
         self.sourceCurrency = self.currencies[row];
-    } else if ([self.currencyMode isEqualToString:TARGET]) {
+    }
+    else if ([self.currencyMode isEqualToString:TARGET]) {
         self.targetCurrency = self.currencies[row];
     }
     
     [self displayCurrencies];
     [self displayAmounts];
 }
-
-
-
 
 @end
