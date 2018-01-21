@@ -87,18 +87,18 @@
 - (void)initKeypadView {
     for (UIView *subView in self.keypadView.subviews) [subView removeFromSuperview];
     
-    CGRect windowRect = [[UIScreen mainScreen] bounds];
-    CGFloat windowWidth = windowRect.size.width - 40;
-    CGFloat windowHeight = windowRect.size.height - 40;
-    
-    CGRect frame = CGRectZero;
-    if ([self.rotation isEqualToString:PORTRAIT]) {
-        frame = CGRectMake(20, self.currencyViewHeight.constant + 60, windowWidth, windowHeight - self.currencyViewHeight.constant - 60);
-    }
-    else {
-        frame = CGRectMake(windowWidth / 2 + 30, 20, windowWidth / 2 - 10, windowHeight);
-    }
-    self.keypadView.frame = frame;
+//    CGRect windowRect = [[UIScreen mainScreen] bounds];
+//    CGFloat windowWidth = windowRect.size.width - 40;
+//    CGFloat windowHeight = windowRect.size.height - 40;
+//
+//    CGRect frame = CGRectZero;
+//    if ([self.rotation isEqualToString:PORTRAIT]) {
+//        frame = CGRectMake(20, self.currencyViewHeight.constant + 60, windowWidth, windowHeight - self.currencyViewHeight.constant - 60);
+//    }
+//    else {
+//        frame = CGRectMake(windowWidth / 2 + 30, 20, windowWidth / 2 - 10, windowHeight);
+//    }
+//    self.keypadView.frame = frame;
     
     NSArray *keypads = [NSArray arrayWithObjects:
                         @"7", @"8", @"9",
@@ -107,8 +107,8 @@
                         @"0", @".", DELETE,
                         nil];
     
-    float width = frame.size.width / 3;
-    float height = frame.size.height / 4;
+    float width = self.keypadView.frame.size.width / 3;
+    float height = self.keypadView.frame.size.height / 4;
     
     for (int i = 0; i < 12; i++) {
         UIButton *keypad = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -149,16 +149,16 @@
     self.currencyView.layer.cornerRadius = 12;
     self.currencyView.layer.masksToBounds = true;
     
-    if ([self.rotation isEqualToString:PORTRAIT]) {
-        self.currencyViewRight.constant = 20;
-        self.currencyViewHeight.constant = 223;
-    } else {
-        CGRect windowRect = [[UIScreen mainScreen] bounds];
-        CGFloat windowWidth = windowRect.size.width - 40;
-        CGFloat windowHeight = windowRect.size.height - 40;
-        self.currencyViewRight.constant = windowWidth / 2 + 30;
-        self.currencyViewHeight.constant = windowHeight;
-    }
+//    if ([self.rotation isEqualToString:PORTRAIT]) {
+//        self.currencyViewRight.constant = 20;
+//        self.currencyViewHeight.constant = 223;
+//    } else {
+//        CGRect windowRect = [[UIScreen mainScreen] bounds];
+//        CGFloat windowWidth = windowRect.size.width - 40;
+//        CGFloat windowHeight = windowRect.size.height - 40;
+//        self.currencyViewRight.constant = windowWidth / 2 + 30;
+//        self.currencyViewHeight.constant = windowHeight;
+//    }
     
     self.currencyMode = SOURCE;
     
