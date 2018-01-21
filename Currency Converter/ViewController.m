@@ -70,6 +70,9 @@ typedef enum {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationChanged:) name:UIDeviceOrientationDidChangeNotification object:[UIDevice currentDevice]];
 }
 
+/**
+ * set default data in case of failure to receive data
+ */
 - (void)initData {
     self.sourceCurrency = @"EUR";
     self.sourceAmount = @"1";
@@ -78,6 +81,9 @@ typedef enum {
     self.targetAmount = @"1";
 }
 
+/**
+ * init keypadView to set buttons according to screen rotation
+ */
 - (void)initKeypadView {
     for (UIView *subView in self.keypadView.subviews) [subView removeFromSuperview];
     
@@ -105,6 +111,9 @@ typedef enum {
     }
 }
 
+/**
+ * init datePickerView to set min and max dates
+ */
 - (void)initDatePickerView {
     [self.datePickerView setValue:[UIColor whiteColor] forKey:@"textColor"];
     
@@ -134,6 +143,10 @@ typedef enum {
 
 #pragma mark Process Methods
 
+/**
+ * get currency data from https://api.fixer.io/
+ * the docuemnt is at https://github.com/hakanensari/fixer
+ */
 - (void)getCurrencyData {
     self.currencies = [NSMutableArray arrayWithObject:@"EUR"];
     self.rates = [NSMutableArray arrayWithObject:@"1.000"];
@@ -189,6 +202,9 @@ typedef enum {
     [data resume];
 }
 
+/**
+ * display date at dateButton from datePickerView
+ */
 - (void)displayDate {
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateStyle:NSDateFormatterLongStyle];
@@ -198,11 +214,17 @@ typedef enum {
     [self.dateButton setTitle:dateString forState:UIControlStateNormal];
 }
 
+/**
+ * display currency names when the currency picker changed
+ */
 - (void)displayCurrencies {
     [self.sourceCurrencyButton setTitle:self.sourceCurrency forState:UIControlStateNormal];
     [self.targetCurrencyButton setTitle:self.targetCurrency forState:UIControlStateNormal];
 }
 
+/**
+ * display currency amounts when the amount changed
+ */
 - (void)displayAmounts {
     [self convertAmount];
     
@@ -210,6 +232,9 @@ typedef enum {
     [self.targetAmountButton setTitle:[self stringToDecimal:self.targetAmount] forState:UIControlStateNormal];
 }
 
+/**
+ * convert amount acoording to the currency rates
+ */
 - (void)convertAmount {
     double sourceRate = [[self.rates objectAtIndex:[self.currencies indexOfObject:self.sourceCurrency]] doubleValue];
     double targetRate = [[self.rates objectAtIndex:[self.currencies indexOfObject:self.targetCurrency]] doubleValue];
@@ -222,6 +247,11 @@ typedef enum {
     }
 }
 
+/**
+ * convert string to decimal format
+ * @param string numeric string
+ * @return a newly converted decimal format numeric string
+ */
 - (NSString *)stringToDecimal:(NSString *)string {
     NSString *leftString;
     NSString *rightString;
@@ -236,6 +266,10 @@ typedef enum {
         return [NSString localizedStringWithFormat:@"%@", [NSNumber numberWithDouble:[string doubleValue]]];
     }
 }
+
+/**
+ * change amounts with input string
+ */
 
 - (void)changeAmount:(NSString *)string {
     NSString *amount;
@@ -285,6 +319,9 @@ typedef enum {
     }
 }
 
+/**
+ * perform initKeypadView when recieving notification of orientation
+ */
 - (void)orientationChanged:(NSNotification *)note{
     UIDevice * device = note.object;
     
