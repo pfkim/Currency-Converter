@@ -44,14 +44,18 @@
     [super viewDidLoad];
     
     [self prepareDeviceRotation];
-    [self jsonFetch];
+    [self getCurrencyData];
     [self initData];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    
+    [self initKeypadView];
+    [self initCurrencyView];
+    [self initDatePickerView];
+    [self initCurrencyPickerView];
 }
-
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -101,8 +105,6 @@
 }
 
 - (void)initDatePickerView {
-    self.datePickerView.frame = self.keypadView.frame;
-    
     [self.datePickerView setValue:[UIColor whiteColor] forKey:@"textColor"];
     
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
@@ -115,8 +117,6 @@
 }
 
 - (void)initCurrencyPickerView {
-    self.currencyPickerView.frame = self.keypadView.frame;
-    
     self.currencyPickerView.delegate = self;
     self.currencyPickerView.dataSource = self;
 }
@@ -133,7 +133,7 @@
 
 #pragma mark Process Methods
 
-- (void)jsonFetch {
+- (void)getCurrencyData {
     self.currencies = [NSMutableArray arrayWithObject:@"EUR"];
     self.rates = [NSMutableArray arrayWithObject:@"1.000"];
     
@@ -144,39 +144,39 @@
     
     NSString *dateString = [formatter stringFromDate:date];
     NSString *urlString = [NSString stringWithFormat:@"https://api.fixer.io/%@", dateString];
-    NSLog(@"url string: %@", urlString);
     NSURL *url = [NSURL URLWithString:urlString];
     NSURLSession *session = [NSURLSession sharedSession];
     
     NSURLSessionDataTask *data = [session dataTaskWithURL:url completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
-        
-        NSLog(@"data: %@", data);
-        NSLog(@"error: %@", error);
-        
         if (data != nil && error == nil) {
             NSError *jsonError = nil;
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&jsonError];
             
-            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&jsonError ];
-
-            for (NSString *currency in [json[@"rates"] allKeys]) {
-                [self.currencies addObject:currency];
-                [self.rates addObject:@"1.000"];
-            }
-            
-            // sort
-            NSLog(@"currencies: %@", self.currencies);
-            
-            if (json.count > 0) {
-                for (NSString *currency in self.currencies) {
-                    NSLog(@"currency: %@", currency);
-                    if ([currency isEqualToString:@"EUR"]) {
-                        [self.rates replaceObjectAtIndex:[self.currencies indexOfObject:currency] withObject:@"1.000"];
-                    }
-                    else {
-                        [self.rates replaceObjectAtIndex:[self.currencies indexOfObject:currency] withObject:[json[@"rates"] valueForKey:currency]];
+            if (jsonError == nil) {
+                for (NSString *currency in [json[@"rates"] allKeys]) {
+                    [self.currencies addObject:currency];
+                    [self.rates addObject:@"1.000"];
+                }
+                
+                self.currencies = [NSMutableArray arrayWithArray:[self.currencies sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)]];
+                
+                if (json.count > 0) {
+                    for (NSString *currency in self.currencies) {
+                        if ([currency isEqualToString:@"EUR"]) {
+                            [self.rates replaceObjectAtIndex:[self.currencies indexOfObject:currency] withObject:@"1.000"];
+                        }
+                        else {
+                            [self.rates replaceObjectAtIndex:[self.currencies indexOfObject:currency] withObject:[json[@"rates"] valueForKey:currency]];
+                        }
                     }
                 }
+                else {
+                    // do nothing
+                }
             }
+        }
+        else {
+            // do nothing
         }
         
         dispatch_sync(dispatch_get_main_queue(),^{
@@ -216,7 +216,7 @@
     if ([self.currencyMode isEqualToString:SOURCE]) {
         self.targetAmount = [NSString stringWithFormat:@"%.2f", [self.sourceAmount doubleValue] * targetRate / sourceRate];
     }
-    else if ([self.currencyMode isEqualToString:TARGET]) {
+    else {
         self.sourceAmount = [NSString stringWithFormat:@"%.2f", [self.targetAmount doubleValue] * sourceRate / targetRate];
     }
 }
@@ -231,8 +231,9 @@
         
         return [NSString stringWithFormat:@"%@.%@", [NSString localizedStringWithFormat:@"%@", [NSNumber numberWithDouble:[leftString doubleValue]]], rightString];
     }
-    
-    return [NSString localizedStringWithFormat:@"%@", [NSNumber numberWithDouble:[string doubleValue]]];
+    else {
+        return [NSString localizedStringWithFormat:@"%@", [NSNumber numberWithDouble:[string doubleValue]]];
+    }
 }
 
 - (void)changeAmount:(NSString *)string {
@@ -241,7 +242,7 @@
     if ([self.currencyMode isEqualToString:SOURCE]) {
         amount = self.sourceAmount;
     }
-    else if ([self.currencyMode isEqualToString:TARGET]) {
+    else {
         amount = self.targetAmount;
     }
     
@@ -249,15 +250,21 @@
         if (amount.length > 0) {
             amount = [amount substringToIndex:amount.length - 1];
         }
+        else {
+            // do nothing
+        }
     }
     else if ([string isEqualToString:@"."]){
         if ([amount rangeOfString:string].location == NSNotFound) {
             amount = [NSString stringWithFormat:@"%@%@", amount, string];
         }
+        else {
+            // do nothing
+        }
     }
     else {
         if ([amount rangeOfString:@"."].location != NSNotFound && [amount rangeOfString:@"."].location == amount.length - 3) {
-            //
+            // do nothing
         }
         else {
             if ([amount isEqualToString:@"0"]) {
@@ -272,7 +279,7 @@
     if ([self.currencyMode isEqualToString:SOURCE]) {
         self.sourceAmount = amount;
     }
-    else if ([self.currencyMode isEqualToString:TARGET]) {
+    else {
         self.targetAmount = amount;
     }
 }
@@ -285,9 +292,7 @@
         case UIDeviceOrientationLandscapeLeft:
         case UIDeviceOrientationLandscapeRight:
             [self initKeypadView];
-            [self initCurrencyView];
-            [self initDatePickerView];
-            [self initCurrencyPickerView];
+            
             break;
             
         default:
@@ -320,7 +325,7 @@
     if ([self.currencyMode isEqualToString:SOURCE]) {
         row = [self.currencies indexOfObject:self.sourceCurrency];
     }
-    else if ([self.currencyMode isEqualToString:TARGET]) {
+    else {
         row = [self.currencies indexOfObject:self.targetCurrency];
     }
     
@@ -360,11 +365,8 @@
     if (button.tag == 0) {
         self.currencyMode = SOURCE;
     }
-    else if (button.tag == 1) {
-        self.currencyMode = TARGET;
-    }
     else {
-        //
+        self.currencyMode = TARGET;
     }
     
     [self showCurrencyPickerView];
@@ -376,11 +378,8 @@
     if (button.tag == 0) {
         self.currencyMode = SOURCE;
     }
-    else if (button.tag == 1) {
-        self.currencyMode = TARGET;
-    }
     else {
-        //
+        self.currencyMode = TARGET;
     }
     
     [self showKeypadView];
@@ -397,7 +396,7 @@
     }
     
     [self displayDate];
-    [self jsonFetch];
+    [self getCurrencyData];
 }
 
 - (IBAction)todayButtonPressed:(id)sender {
@@ -405,7 +404,7 @@
     self.datePickerView.date = [NSDate date];
     
     [self displayDate];
-    [self jsonFetch];
+    [self getCurrencyData];
 }
 
 #pragma mark UIPickerView
@@ -433,7 +432,7 @@
     if ([self.currencyMode isEqualToString:SOURCE]) {
         self.sourceCurrency = self.currencies[row];
     }
-    else if ([self.currencyMode isEqualToString:TARGET]) {
+    else {
         self.targetCurrency = self.currencies[row];
     }
     
