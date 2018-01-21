@@ -11,8 +11,6 @@
 #define SOURCE @"source"
 #define TARGET @"target"
 #define DELETE @"Delete"
-#define PORTRAIT @"portrait"
-#define LANDSCAPE @"landscape"
 
 #import "ViewController.h"
 
@@ -37,10 +35,6 @@
 @property (strong, nonatomic) NSString *targetCurrency;
 @property (strong, nonatomic) NSString *sourceAmount;
 @property (strong, nonatomic) NSString *targetAmount;
-@property (strong, nonatomic) NSString *rotation;
-
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *currencyViewHeight;
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *currencyViewRight;
 
 @end
 
@@ -56,11 +50,6 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    
-    [self initKeypadView];
-    [self initCurrencyView];
-    [self initDatePickerView];
-    [self initCurrencyPickerView];
 }
 
 
@@ -86,19 +75,6 @@
 
 - (void)initKeypadView {
     for (UIView *subView in self.keypadView.subviews) [subView removeFromSuperview];
-    
-//    CGRect windowRect = [[UIScreen mainScreen] bounds];
-//    CGFloat windowWidth = windowRect.size.width - 40;
-//    CGFloat windowHeight = windowRect.size.height - 40;
-//
-//    CGRect frame = CGRectZero;
-//    if ([self.rotation isEqualToString:PORTRAIT]) {
-//        frame = CGRectMake(20, self.currencyViewHeight.constant + 60, windowWidth, windowHeight - self.currencyViewHeight.constant - 60);
-//    }
-//    else {
-//        frame = CGRectMake(windowWidth / 2 + 30, 20, windowWidth / 2 - 10, windowHeight);
-//    }
-//    self.keypadView.frame = frame;
     
     NSArray *keypads = [NSArray arrayWithObjects:
                         @"7", @"8", @"9",
@@ -148,17 +124,6 @@
 - (void)initCurrencyView {
     self.currencyView.layer.cornerRadius = 12;
     self.currencyView.layer.masksToBounds = true;
-    
-//    if ([self.rotation isEqualToString:PORTRAIT]) {
-//        self.currencyViewRight.constant = 20;
-//        self.currencyViewHeight.constant = 223;
-//    } else {
-//        CGRect windowRect = [[UIScreen mainScreen] bounds];
-//        CGFloat windowWidth = windowRect.size.width - 40;
-//        CGFloat windowHeight = windowRect.size.height - 40;
-//        self.currencyViewRight.constant = windowWidth / 2 + 30;
-//        self.currencyViewHeight.constant = windowHeight;
-//    }
     
     self.currencyMode = SOURCE;
     
@@ -313,32 +278,21 @@
 }
 
 - (void)orientationChanged:(NSNotification *)note{
-    BOOL isChanged = NO;
-    
     UIDevice * device = note.object;
     
     switch(device.orientation) {
         case UIDeviceOrientationPortrait:
-            self.rotation = PORTRAIT;
-            isChanged = YES;
-            break;
-            
         case UIDeviceOrientationLandscapeLeft:
         case UIDeviceOrientationLandscapeRight:
-            self.rotation = LANDSCAPE;
-            isChanged = YES;
+            [self initKeypadView];
+            [self initCurrencyView];
+            [self initDatePickerView];
+            [self initCurrencyPickerView];
             break;
             
         default:
             break;
     };
-    
-    if (isChanged) {
-        [self initCurrencyView];
-        [self initKeypadView];
-        [self initDatePickerView];
-        [self initCurrencyPickerView];
-    }
 }
 
 #pragma mark Action Methods
