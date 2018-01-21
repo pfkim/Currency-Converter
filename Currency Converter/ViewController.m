@@ -6,11 +6,12 @@
 //  Copyright © 2018년 Kim. All rights reserved.
 //
 
-#define SOURCE_CURRENCY @"source_CURRENCY"
-#define TARGET_CURRENCY @"TARGET_CURRENCY"
-#define SOURCE @"source"
-#define TARGET @"target"
 #define DELETE @"Delete"
+
+typedef enum {
+    kSource,
+    kTarget
+} CurrencyMode;
 
 #import "ViewController.h"
 
@@ -28,7 +29,7 @@
 @property (weak, nonatomic) IBOutlet UIButton *todayButton;
 
 @property (strong, nonatomic) NSUserDefaults *defaults;
-@property (strong, nonatomic) NSString *currencyMode;
+@property (assign, nonatomic) CurrencyMode currencyMode;
 @property (strong, nonatomic) NSMutableArray *currencies;
 @property (strong, nonatomic) NSMutableArray *rates;
 @property (strong, nonatomic) NSString *sourceCurrency;
@@ -125,7 +126,7 @@
     self.currencyView.layer.cornerRadius = 12;
     self.currencyView.layer.masksToBounds = true;
     
-    self.currencyMode = SOURCE;
+    self.currencyMode = kSource;
     
     [self displayCurrencies];
     [self displayAmounts];
@@ -213,7 +214,7 @@
     double sourceRate = [[self.rates objectAtIndex:[self.currencies indexOfObject:self.sourceCurrency]] doubleValue];
     double targetRate = [[self.rates objectAtIndex:[self.currencies indexOfObject:self.targetCurrency]] doubleValue];
     
-    if ([self.currencyMode isEqualToString:SOURCE]) {
+    if (self.currencyMode == kSource) {
         self.targetAmount = [NSString stringWithFormat:@"%.2f", [self.sourceAmount doubleValue] * targetRate / sourceRate];
     }
     else {
@@ -239,7 +240,7 @@
 - (void)changeAmount:(NSString *)string {
     NSString *amount;
     
-    if ([self.currencyMode isEqualToString:SOURCE]) {
+    if (self.currencyMode == kSource) {
         amount = self.sourceAmount;
     }
     else {
@@ -276,7 +277,7 @@
         }
     }
     
-    if ([self.currencyMode isEqualToString:SOURCE]) {
+    if (self.currencyMode == kSource) {
         self.sourceAmount = amount;
     }
     else {
@@ -292,7 +293,6 @@
         case UIDeviceOrientationLandscapeLeft:
         case UIDeviceOrientationLandscapeRight:
             [self initKeypadView];
-            
             break;
             
         default:
@@ -322,7 +322,7 @@
 - (void)showCurrencyPickerView {
     NSInteger row = 0;
     
-    if ([self.currencyMode isEqualToString:SOURCE]) {
+    if (self.currencyMode == kSource) {
         row = [self.currencies indexOfObject:self.sourceCurrency];
     }
     else {
@@ -354,7 +354,6 @@
     }];
 }
 
-
 - (IBAction)datePressed:(id)sender {
     [self showDatePickerView];
 }
@@ -363,10 +362,10 @@
     UIButton *button = (UIButton *)sender;
     
     if (button.tag == 0) {
-        self.currencyMode = SOURCE;
+        self.currencyMode = kSource;
     }
     else {
-        self.currencyMode = TARGET;
+        self.currencyMode = kTarget;
     }
     
     [self showCurrencyPickerView];
@@ -376,10 +375,10 @@
     UIButton *button = (UIButton *)sender;
     
     if (button.tag == 0) {
-        self.currencyMode = SOURCE;
+        self.currencyMode = kSource;
     }
     else {
-        self.currencyMode = TARGET;
+        self.currencyMode = kTarget;
     }
     
     [self showKeypadView];
@@ -429,7 +428,7 @@
 }
 
 - (void)pickerView:(UIPickerView *)thePickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
-    if ([self.currencyMode isEqualToString:SOURCE]) {
+    if (self.currencyMode == kSource) {
         self.sourceCurrency = self.currencies[row];
     }
     else {
